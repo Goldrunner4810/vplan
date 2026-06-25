@@ -1,15 +1,22 @@
+<!-- +page.svelte -->
 <script lang='ts'>
     import type { PageServerData } from './$types';
 
-    // Wir definieren das Interface explizit, damit TypeScript nicht meckert
+    type EventStat = {
+        id: number;
+        title: string;
+        zeit: string | Date | null;
+        zusagen: number | string | null;
+        absagen: number | string | null;
+    };
+
+    // Svelte 5 Runes
     let { data }: { data: PageServerData } = $props();
 
-    // Sicherer Zugriff mit Fallback
-    let stats = $state(data.stats || []);
+    let stats = $derived((data.stats || []) as EventStat[]);
 
-    // Berechnungen mit explizitem Number-Cast
-    let totalZusagen = $derived(stats.reduce((acc, curr) => acc + Number(curr.zusagen || 0), 0));
-    let totalAbsagen = $derived(stats.reduce((acc, curr) => acc + Number(curr.absagen || 0), 0));
+    let totalZusagen = $derived(stats.reduce((acc: number, curr: EventStat) => acc + Number(curr.zusagen || 0), 0));
+    let totalAbsagen = $derived(stats.reduce((acc: number, curr: EventStat) => acc + Number(curr.absagen || 0), 0));
 
     function formatTime(zeitString: string | Date | null) {
         if (!zeitString) return '-';
@@ -23,9 +30,9 @@
     <h1>Vereins-Statistik</h1>
 
     <section class="controls">
-        <form method="POST" action="?/exportCSV">
-            <button type="submit" class="export-btn">CSV Export herunterladen</button>
-        </form>
+        <a href="/api/export" class="export-btn" download="statistik.csv">
+            CSV Export herunterladen
+        </a>
     </section>
 
     <section class="summary">
@@ -61,18 +68,38 @@
             {/each}
         </tbody>
     </table>
+
+    <a href="/dash" class="back-link">Dashboard</a>
 </main>
 
 <style>
     main { padding: 2rem; }
     .controls { margin-bottom: 20px; }
-    .export-btn { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+    
+    /* Der Link tarnt sich perfekt als Button */
+    .export-btn { 
+        display: inline-block;
+        text-decoration: none;
+        background: #007bff; 
+        color: white; 
+        padding: 10px 20px; 
+        border: none; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        font-size: 0.9rem;
+    }
+    .export-btn:hover {
+        background: #0056b3;
+    }
+
     .summary { display: flex; gap: 20px; margin-bottom: 2rem; }
     .card { padding: 1rem; border: 1px solid #ddd; border-radius: 8px; flex: 1; text-align: center; }
     .big-number { font-size: 2rem; font-weight: bold; margin: 0; }
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
     th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
     .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
     .green { background: #d4edda; color: #155724; }
     .red { background: #f8d7da; color: #721c24; }
+    .back-link { display: inline-block; margin-top: 1rem; color: #007bff; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
 </style>

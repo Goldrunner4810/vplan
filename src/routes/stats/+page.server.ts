@@ -1,19 +1,45 @@
-import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad, Actions } from './$types';
+import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
+import { sql } from 'drizzle-orm';
+
+async function isAdmin(userId: string) {
+    const result = await db.execute(sql`
+        SELECT roles.name
+        FROM "user"
+        JOIN roles ON roles.id = "user".role_id
+        WHERE "user".id = ${userId}
+        LIMIT 1
+    `);
+
+    return result[0]?.name === 'Admin';
+}
 
 export const load: PageServerLoad = async (event) => {
-    if (!event.locals.user) throw redirect(302, '/auth');
+    // Überprüfen, ob ein Nutzer eingeloggt ist und Admin-Rechte hat
+    const userIsAdmin = event.locals.user ? await isAdmin(event.locals.user.id) : false;
 
+    // Wenn der Nutzer KEIN Admin ist, geben wir Dummy-Daten zurück.
+    // Das sorgt für den visuellen Blur-Effekt auf dem Bildschirm, verhindert aber Datenlecks!
+    if (!userIsAdmin) {
+        return {
+            isAdmin: false,
+            stats: [
+                { id: 1, title: 'Sommerfest 2024', zeit: new Date().toISOString(), zusagen: 45, absagen: 12 },
+                { id: 2, title: 'Weihnachtsfeier', zeit: new Date().toISOString(), zusagen: 80, absagen: 5 },
+                { id: 3, title: 'Jahreshauptversammlung', zeit: new Date().toISOString(), zusagen: 30, absagen: 20 },
+            ]
+        };
+    }
+
+    // Wenn der Nutzer Admin ist, laden wir die echten Daten aus der Datenbank
     try {
-        // Wir stellen sicher, dass wir explizite Alias-Namen haben
         const statsQuery = await db.execute(`
             SELECT 
                 p.id, 
                 p.title, 
                 p.zeit, 
-                COALESCE(COUNT(et.user_id) FILTER (WHERE et.status = 'zugesagt'), 0) AS zusagen,
-                COALESCE(COUNT(et.user_id) FILTER (WHERE et.status = 'abgesagt'), 0) AS absagen
+                COALESCE(COUNT(et.user_id) FILTER (WHERE et.status = 'kommen'), 0) AS zusagen,
+                COALESCE(COUNT(et.user_id) FILTER (WHERE et.status = 'absagen'), 0) AS absagen
             FROM posts p
             LEFT JOIN event_teilnehmer et ON p.id = et.post_id
             WHERE p.zeit IS NOT NULL
@@ -22,38 +48,11 @@ export const load: PageServerLoad = async (event) => {
         `);
 
         return {
+            isAdmin: true,
             stats: (statsQuery as any).rows ?? statsQuery ?? []
         };
     } catch (err) {
         console.error("Datenbank-Fehler:", err);
-        return { stats: [] };
-    }
-};
-
-export const actions: Actions = {
-    exportCSV: async () => {
-        const result = await db.execute(`
-            SELECT p.title, p.zeit, 
-            COALESCE(COUNT(et.user_id) FILTER (WHERE et.status = 'zugesagt'), 0) AS zusagen,
-            COALESCE(COUNT(et.user_id) FILTER (WHERE et.status = 'abgesagt'), 0) AS absagen
-            FROM posts p
-            LEFT JOIN event_teilnehmer et ON p.id = et.post_id
-            GROUP BY p.title, p.zeit
-        `);
-
-        const data = (result as any).rows ?? result;
-
-        let csvContent = "\uFEFFEvent,Datum,Zusagen,Absagen\n";
-        for (const row of data) {
-            const date = row.zeit ? new Date(row.zeit).toLocaleDateString('de-AT') : '';
-            csvContent += `"${row.title}","${date}",${row.zusagen},${row.absagen}\n`;
-        }
-
-        return new Response(csvContent, {
-            headers: {
-                'Content-Type': 'text/csv; charset=utf-8',
-                'Content-Disposition': 'attachment; filename="statistik.csv"'
-            }
-        });
+        return { isAdmin: true, stats: [] };
     }
 };
