@@ -1,4 +1,3 @@
-<!-- +page.svelte -->
 <script lang='ts'>
 	import { enhance } from '$app/forms';
 	import type { PageServerData } from './$types';
@@ -30,7 +29,14 @@
 		<span class="user-badge" style="color: #E5E7EB; margin-right: 1rem;">
 			Hi, {data.user.name}!
 		</span>
-		<a href="/stats" class="nav-link">Statistik</a>
+		
+		{#if data.isAdmin}
+			<a href="/post/new" class="nav-link">Add</a>
+			<a href="/stats" class="nav-link">Statistik</a>
+			
+		{/if}
+		<a href="/cal" class="nav-link">Callendar</a>
+		
 		<form method="post" action="?/signOut" use:enhance style="margin: 0; display: inline;">
 			<button class="nav-link" style="background: transparent; border: none; cursor: pointer; font-size: inherit;">Sign out</button>
 		</form>

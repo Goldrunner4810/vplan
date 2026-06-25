@@ -32,6 +32,7 @@
 				Hi, {data.user.name}!
 			</span>
 		{/if}
+		<a href="/cal" class="nav-link active">Callendar</a>
 		<a href="/dash" class="nav-link active">Dashboard</a>
 		<form method="post" action="?/signOut" use:enhance style="margin: 0; display: inline;">
 			<button class="nav-link" style="background: transparent; border: none; cursor: pointer; font-size: inherit;">Sign out</button>
@@ -68,10 +69,27 @@
 						</strong>
 					</p>
 
-					<form method="post" action="?/attendance" use:enhance style="display: flex; gap: var(--spacing-sm);">
-						<button name="status" value="kommen" class="btn btn-small" style="flex: 1; background: var(--accent-color);">Kommen</button>
-						<button name="status" value="absagen" class="btn btn-secondary btn-small" style="flex: 1; border-color: #DC2626; color: #DC2626;">Absagen</button>
-					</form>
+<form method="post" action="?/attendance" use:enhance style="display: flex; gap: var(--spacing-sm);">
+	<button
+		name="status"
+		value="kommen"
+		class="btn btn-small status-btn kommen"
+		class:selected={data.myStatus === 'kommen'}
+		style="flex: 1;"
+	>
+		Kommen
+	</button>
+
+	<button
+		name="status"
+		value="absagen"
+		class="btn btn-small status-btn absagen"
+		class:selected={data.myStatus === 'absagen'}
+		style="flex: 1;"
+	>
+		Absagen
+	</button>
+</form>
 				</div>
 
 				<div class="card" style="margin-bottom: 0;">
@@ -438,4 +456,31 @@
 		color: var(--text-secondary);
 		margin-bottom: 4px;
 	}
+	.status-btn {
+	background: transparent;
+	border: 1px solid transparent;
+	transition: all 0.2s ease;
+}
+
+/* default (not selected) */
+.status-btn.kommen {
+	color: #16a34a;
+	border-color: #16a34a;
+}
+
+.status-btn.absagen {
+	color: #dc2626;
+	border-color: #dc2626;
+}
+
+/* selected state */
+.status-btn.selected.kommen {
+	background: #16a34a;
+	color: white;
+}
+
+.status-btn.selected.absagen {
+	background: #dc2626;
+	color: white;
+}
 </style>
