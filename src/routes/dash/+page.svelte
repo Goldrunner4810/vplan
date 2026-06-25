@@ -60,39 +60,47 @@
 		</form>
 	</div>
 
-	{#if data.events.length === 0}
-		<div class="card">
-			<p>No events found.</p>
-		</div>
-	{:else}
-		<div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
-			{#each data.events as event}
-				<a href={"/post/" + event.id} class="card post-link-card" style="margin-bottom: 0;">
-					<article>
-						<header class="post-header" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0; align-items: flex-start;">
-							<div style="flex: 1; padding-right: var(--spacing-lg);">
-								<h3 style="margin-bottom: var(--spacing-sm);">{event.title}</h3>
-								<div class="post-body mt-md" style="margin-top: 0;">
-									<p style="color: var(--text-secondary);">{event.content}</p>
-								</div>
+{#if data.events.length === 0}
+	<div class="card">
+		<p>No events found.</p>
+	</div>
+{:else}
+	<div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+		{#each data.events as event}
+			<a href={"/post/" + event.id} class="card post-link-card" style="margin-bottom: 0;">
+				<article>
+					<header class="post-header" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0; align-items: flex-start;">
+						<div style="flex: 1; padding-right: var(--spacing-lg);">
+							<h3 style="margin-bottom: var(--spacing-sm);">{event.title}</h3>
+							<div class="post-body mt-md" style="margin-top: 0;">
+								<p style="
+									color: var(--text-secondary);
+									display: -webkit-box;
+									-webkit-line-clamp: 3;
+									-webkit-box-orient: vertical;  
+									overflow: hidden;
+								">
+									{event.content}
+								</p>
 							</div>
-							
-							{#if formatEventTimeOnly(event.zeit)}
-								<div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; min-width: max-content;">
-									<time datetime={String(event.zeit)} style="font-size: 1.75rem; font-weight: 700; color: var(--primary-color); line-height: 1;">
-										{formatEventTimeOnly(event.zeit)}
-									</time>
-									<span class="post-meta" style="margin-top: 6px; font-weight: 500;">
-										{formatEventDateOnly(event.zeit)}
-									</span>
-								</div>
-							{/if}
-						</header>
-					</article>
-				</a>
-			{/each}
-		</div>
-	{/if}
+						</div>
+						
+						{#if formatEventTimeOnly(event.zeit)}
+							<div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; min-width: max-content;">
+								<time datetime={String(event.zeit)} style="font-size: 1.75rem; font-weight: 700; color: var(--primary-color); line-height: 1;">
+									{formatEventTimeOnly(event.zeit)}
+								</time>
+								<span class="post-meta" style="margin-top: 6px; font-weight: 500;">
+									{formatEventDateOnly(event.zeit)}
+								</span>
+							</div>
+						{/if}
+					</header>
+				</article>
+			</a>
+		{/each}
+	</div>
+{/if}
 </main>
 
 <style>
